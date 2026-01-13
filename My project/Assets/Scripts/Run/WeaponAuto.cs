@@ -6,25 +6,32 @@ public class WeaponAuto : MonoBehaviour
     public float attackCooldown = 1f;
 
     float nextAttackTime = 0f;
-
     List<Collider2D> enemiesInRange = new List<Collider2D>();
 
     void Update()
     {
-        if (Time.time >= nextAttackTime && enemiesInRange.Count > 0)
+        if (Time.time < nextAttackTime) return;
+
+        enemiesInRange.RemoveAll(e => e == null);
+
+        if (enemiesInRange.Count == 0) return;
+
+        Collider2D closestEnemy = GetClosestEnemy();
+        if (closestEnemy == null) return;
+
+        Enemy enemy = closestEnemy.GetComponent<Enemy>();
+        if (enemy != null)
         {
-            Collider2D closestEnemy = GetClosestEnemy();
-            if (closestEnemy != null)
-            {
-                Destroy(closestEnemy.gameObject);
-                nextAttackTime = Time.time + attackCooldown;
-            }
+            enemy.Die();
         }
+
+        enemiesInRange.Remove(closestEnemy);
+        nextAttackTime = Time.time + attackCooldown;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Enemy"))
+        if (other.CompareTag("Enemy") && !enemiesInRange.Contains(other))
         {
             enemiesInRange.Add(other);
         }
